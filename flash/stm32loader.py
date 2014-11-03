@@ -53,7 +53,7 @@ class CommandInterface:
             stopbits=1,
             xonxoff=0,              # enable software flow control
             rtscts=0,               # disable RTS/CTS flow control
-            timeout=5               # set a timeout value, None for waiting forever
+            timeout=1               # set a timeout value, None for waiting forever
         )
 
 
@@ -61,6 +61,7 @@ class CommandInterface:
         # wait for ask
         try:
             ask = ord(self.sp.read())
+            print(hex(ask));
         except:
             raise CmdException("Can't read port or timeout")
         else:
@@ -83,10 +84,29 @@ class CommandInterface:
         time.sleep(0.5)
 
     def initChip(self):
+        print "initChip"
         # Set boot
-        self.sp.setRTS(0)
-        self.reset()
+        # self.sp.setRTS(0)
+        # self.reset()
+        cnt = 1
+        while 1:
+            if cnt > 10:
+                print "send sync byte, reset stm32 for bootmode..."
+                self.sp.write("\x7F")
+                cnt = 0
+            cnt = cnt + 1
+            ch = self.sp.read()
+            if ch:
+                if ord(ch) != 0x00:
+                    print(hex(ord(ch)))
+                    if ord(ch) == 0x79:
+                        return 1
 
+        ch = self.sp.read()
+        while ch:
+            print(hex(ord(ch)))
+            ch = self.sp.read()
+        print "send 0x7F..."
         self.sp.write("\x7F")       # Syncro
         return self._wait_for_ask("Syncro")
 
@@ -355,7 +375,7 @@ if __name__ == "__main__":
         usage()
         sys.exit(2)
 
-    QUIET = 5
+    QUIET = 20
 
     for o, a in opts:
         if o == '-V':
