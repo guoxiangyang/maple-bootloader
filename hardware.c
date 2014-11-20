@@ -68,10 +68,10 @@ void strobePin(u32 bank, u8 pin, u8 count, u32 rate) {
 }
 
 void systemReset(void) {
-    SET_REG(RCC_CR, GET_REG(RCC_CR)     | 0x00000001);
+    SET_REG(RCC_CR,   GET_REG(RCC_CR)   | 0x00000001);
     SET_REG(RCC_CFGR, GET_REG(RCC_CFGR) & 0xF8FF0000);
-    SET_REG(RCC_CR, GET_REG(RCC_CR)     & 0xFEF6FFFF);
-    SET_REG(RCC_CR, GET_REG(RCC_CR)     & 0xFFFBFFFF);
+    SET_REG(RCC_CR,   GET_REG(RCC_CR)   & 0xFEF6FFFF);
+    SET_REG(RCC_CR,   GET_REG(RCC_CR)   & 0xFFFBFFFF);
     SET_REG(RCC_CFGR, GET_REG(RCC_CFGR) & 0xFF80FFFF);
 
     SET_REG(RCC_CIR, 0x00000000);  /* disable all RCC interrupts */
@@ -104,6 +104,7 @@ void setupLED(void) {
     rwmVal |= 0x00000004;
     SET_REG(RCC_APB2ENR, rwmVal);
 
+#ifdef MICRODUINO
     /* Setup GPIOA Pin 8 as PP Out */
     SET_REG(GPIO_CRH(GPIOA), 0x00000001);
 
@@ -113,6 +114,17 @@ void setupLED(void) {
     SET_REG(GPIO_CRH(GPIOA), rwmVal);
 
     setPin(GPIOA, 8);
+#else
+    /* Setup GPIOA Pin 5 as PP Out */
+    SET_REG(GPIO_CRL(GPIOA), 0x00100000);
+
+    rwmVal =  GET_REG(GPIO_CRL(GPIOA));
+    rwmVal &= 0xFF0FFFFF;
+    rwmVal |= 0x00100000;
+    SET_REG(GPIO_CRH(GPIOA), rwmVal);
+
+    setPin(GPIOA, 5);
+#endif
 }
 
 void setupBUTTON(void) {

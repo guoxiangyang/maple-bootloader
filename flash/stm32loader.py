@@ -49,11 +49,11 @@ class CommandInterface:
             port=aport,
             baudrate=abaudrate,     # baudrate
             bytesize=8,             # number of databits
-            parity=serial.PARITY_EVEN,
+            parity=serial.PARITY_NONE,
             stopbits=1,
             xonxoff=0,              # enable software flow control
             rtscts=0,               # disable RTS/CTS flow control
-            timeout=1               # set a timeout value, None for waiting forever
+            timeout=1,       # set a timeout value, None for waiting forever
         )
 
 
@@ -61,7 +61,6 @@ class CommandInterface:
         # wait for ask
         try:
             ask = ord(self.sp.read())
-            print(hex(ask));
         except:
             raise CmdException("Can't read port or timeout")
         else:
@@ -76,7 +75,6 @@ class CommandInterface:
                     # Unknow responce
                     raise CmdException("Unknow response. "+info+": "+hex(ask))
 
-
     def reset(self):
         self.sp.setDTR(0)
         time.sleep(0.1)
@@ -90,26 +88,28 @@ class CommandInterface:
         # self.reset()
         cnt = 1
         while 1:
-            if cnt > 10:
-                print "send sync byte, reset stm32 for bootmode..."
-                self.sp.write("\x7F")
-                cnt = 0
+            time.sleep(1);
+            print cnt, "send sync byte(0x7F), reset stm32 for bootmode..."
             cnt = cnt + 1
-            ch = self.sp.read()
-            if ch:
-                if ord(ch) != 0x00:
-                    print(hex(ord(ch)))
-                    if ord(ch) == 0x79:
+            self.sp.write("\x7F")
+            while 1:
+                try:
+                    ch = ord(self.sp.read())
+                except:
+                    print "timeout"
+                    break
+                else:
+                    if ch == 0x79:
+                        print "found stm32..."
                         return 1
-
-        ch = self.sp.read()
-        while ch:
-            print(hex(ord(ch)))
-            ch = self.sp.read()
-        print "send 0x7F..."
-        self.sp.write("\x7F")       # Syncro
-        return self._wait_for_ask("Syncro")
-
+                    elif ch == 0x1F:
+                        print "found exist stm32..."
+                        return 1
+                    elif ch == 0x00:
+                        printf(ch, "\n")
+                    else:
+                        print ch
+                        
     def releaseChip(self):
         self.sp.setRTS(1)
         self.reset()
@@ -123,6 +123,7 @@ class CommandInterface:
         if self.cmdGeneric(0x00):
             mdebug(10, "*** Get command");
             len = ord(self.sp.read())
+            mdebug(10, "        Command Length: "+hex(len))
             version = ord(self.sp.read())
             mdebug(10, "    Bootloader version: "+hex(version))
             dat = map(lambda c: hex(ord(c)), self.sp.read(len))
@@ -414,7 +415,6 @@ if __name__ == "__main__":
             cmd.initChip()
         except:
             print "Can't init. Ensure that BOOT0 is enabled and reset device"
-
         bootversion = cmd.cmdGet()
         mdebug(0, "Bootloader version %X" % bootversion)
         mdebug(0, "Chip id `%s'" % str(map(lambda c: hex(ord(c)), cmd.cmdGetID())))
