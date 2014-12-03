@@ -95,19 +95,54 @@ void setupCLK(void) {
     while ((GET_REG(RCC_CFGR) & 0x00000008) == 0); /* wait for it to come on */
 }
 
+void led_off() {
+    SET_REG(GPIO_BSRR(GPIOC), 0x00000FFF);
+    /* SET_REG(GPIO_BSRR(GPIOB), 0x00000002);  // reset PB1 to high */
+}
+void led_on() {
+    SET_REG(GPIO_BSRR(GPIOC), 0x0FFF0000);
+    /* SET_REG(GPIO_BSRR(GPIOB), 0x00020000);  // reset PB1 to low */
+}
+
+void led_blink(u8 count, u32 rate) {
+    u32 c;
+    led_off();
+    while (count-- > 0) {
+        for (c = rate; c > 0; c--) {
+            asm volatile("nop");
+        }
+        led_on();
+        for (c = rate; c > 0; c--) {
+            asm volatile("nop");
+        }
+        led_off();
+    }
+}
+
 void setupLED(void) {
     // todo, swap out hardcoded pin/bank with macro
     u32 rwmVal; /* read-write-modify place holder var */
 
-    /* Setup APB2 (GPIOA) */
+    /* Setup APB2 (GPIOC) */
     rwmVal =  GET_REG(RCC_APB2ENR);
-    rwmVal |= 0x00000010;
+    rwmVal |= 0x00000018;
     SET_REG(RCC_APB2ENR, rwmVal);
 
-    SET_REG(GPIO_BSRR(GPIOC), 0x00000FFF);
-    SET_REG(GPIO_CRL(GPIOC), 0x11111111);
-    SET_REG(GPIO_CRH(GPIOC), 0x00001111);
 
+    rwmVal = GET_REG(GPIO_CRL(GPIOB));
+    rwmVal = rwmVal & 0xFFFFFF0F;
+    rwmVal = rwmVal | 0x00000010;
+    SET_REG(GPIO_CRL(GPIOB),  rwmVal);      // set PB1 to output
+    /* int i, j; */
+    /* for (j = 0; j < 50000; j++) { */
+    /*     for (i = 0; i < 50000; i++) { */
+    /*         SET_REG(GPIO_BSRR(GPIOB), 0x00000002);  // reset PB1 to high */
+    /*         SET_REG(GPIO_BSRR(GPIOB), 0x00020000);  // reset PB1 to low */
+    /*     } */
+    /* } */
+    SET_REG(GPIO_CRL(GPIOC),  0x11111111);
+    SET_REG(GPIO_CRH(GPIOC),  0x00001111);
+    led_on();
 }
 
 void setupBUTTON(void) {

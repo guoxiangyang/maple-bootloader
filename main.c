@@ -36,21 +36,22 @@
 int main() {
     systemReset(); // peripherals but not PC
     setupCLK();
+    setupFLASH();
     setupLED();
     setupUSB();
-    setupBUTTON();
-    setupFLASH();
+    /* setupBUTTON(); */
 
-    strobePin(LED_BANK, LED, STARTUP_BLINKS, BLINK_FAST);
-
+    /* strobePin(LED_BANK, LED, STARTUP_BLINKS, BLINK_FAST); */
     /* wait for host to upload program or halt bootloader */
-    bool no_user_jump = !checkUserCode(USER_CODE_FLASH) && !checkUserCode(USER_CODE_RAM) || readPin(BUTTON_BANK, BUTTON);
+    bool no_user_jump = !checkUserCode(USER_CODE_FLASH) && !checkUserCode(USER_CODE_RAM);
     int delay_count = 0;
 
     while ((delay_count++ < BOOTLOADER_WAIT)
             || no_user_jump) {
 
-        strobePin(LED_BANK, LED, 1, BLINK_SLOW);
+        led_blink(3, BLINK_SLOW);
+        /* led_blink(2, BLINK_SLOW); */
+        /* strobePin(LED_BANK, LED, 1, BLINK_SLOW); */
 
         if (dfuUploadStarted()) {
             dfuFinishUpload(); // systemHardReset from DFU once done
@@ -58,12 +59,17 @@ int main() {
     }
 
     if (checkUserCode(USER_CODE_RAM)) {
+        led_blink(5, BLINK_SLOW);
+        led_on();
         jumpToUser(USER_CODE_RAM);
     } else if (checkUserCode(USER_CODE_FLASH)) {
+        led_blink(5, BLINK_FAST);
+        led_on();
         jumpToUser(USER_CODE_FLASH);
     } else {
         // some sort of fault occurred, hard reset
-        strobePin(LED_BANK, LED, 5, BLINK_FAST);
+        led_blink(30, BLINK_FAST);
+
         systemHardReset();
     }
 

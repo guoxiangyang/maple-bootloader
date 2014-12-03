@@ -160,7 +160,8 @@ debug: $(TARGET).bin
 install: $(TARGET).bin
 	cp $(TARGET).bin build/main.bin
 	# openocd -f flash/perry_flash.cfg
-	openocd -f flash/stm32.cfg
+	./flash/stm32loader.py -p /dev/cu.usbmodemfd111  -b 115200 -evw build/maple_boot.bin
+	# openocd -f flash/stm32.cfg
 
 run: $(TARGET).bin
 	openocd -f flash/run.cfg
