@@ -25,7 +25,9 @@ _Minimum_Stack_Size = 0x100 ;
 MEMORY
 {
   RAM (xrw)     : ORIGIN = 0x20000000, LENGTH =  20K
-  FLASH (rx)    : ORIGIN = 0x08000000, LENGTH = 128K
+  FLASH (rx)    : ORIGIN = 0x08000000, LENGTH = 127K
+  USERDATA (r)  : ORIGIN = 0x0801FC00, LENGTH = 1K
+
 }
 
 /* higher address of the user mode stack */
@@ -51,9 +53,17 @@ SECTIONS
 	.flashtext :
     {
 			. = ALIGN(4);
+        /* . = 0x00000100; */
       KEEP (*(.flashtext))           /* Startup code */
 			. = ALIGN(4);
     } >FLASH
+
+	.conwindata :
+    {
+			. = ALIGN(4);
+      KEEP (*(.tid))           /* Startup code */
+			. = ALIGN(4);
+    } >USERDATA
 
  /*
   * the program code is stored in the .text section, which goes to Flash

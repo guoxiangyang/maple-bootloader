@@ -107,6 +107,8 @@ class CommandInterface:
                         return 1
                     elif ch == 0x00:
                         printf(ch, "\n")
+                    elif ch == 0xFF:
+                        printf(ch, "\n")
                     else:
                         print ch
                         
