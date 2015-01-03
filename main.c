@@ -32,7 +32,7 @@
  */
 #include "common.h"
 
-char tid[] __attribute__ ((section (".conwindata"))) = "COWN-MQK-NS-CEL";
+char tid[] __attribute__ ((section (".conwindata"))) = "COWN-RTY-RM-POP";
 
 int main() {
     int i = tid[0];
